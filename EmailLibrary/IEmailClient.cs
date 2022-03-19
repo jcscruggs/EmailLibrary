@@ -12,7 +12,7 @@ namespace EmailLibrary
 
         public bool connect(string host, int port, string username, string pass);
 
-        public Task<bool> sendAsync(string from, string to, string subject, string body, string cc = null, string bcc = null);
+        public Task<bool> sendAsync(string from, string to, string subject, string body);
         public void disconnect();
 
     }

@@ -117,69 +117,61 @@ namespace EmailLibrary
             smtp.Disconnect(true);
         }
 
-        public async Task<bool> sendAsync(string from, string to, string subject, string body, string cc = "", string bcc = "")
+        /// <summary>
+        /// send email asyncronous. Email will be attempted until completed up to 3 times
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="subject"></param>
+        /// <param name="body"></param>
+        /// <returns>returns true if email sent else return false</returns>
+        public async Task<bool> sendAsync(string from, string to, string subject, string body)
         {
-            bool completed = false;
+            bool completedStatus = false;
             await Task.Run(() =>
             {
                 int counter = 0;
                 while (counter < 3)
                 {
+                    _logger?.LogInformation("-------------------------");
                     _logger?.LogInformation("attempting to send email: ");
                     try
                     {
                         if (!smtp.IsConnected)
                         {
-                            completed = false;
+                            completedStatus = false;
+                            break;
                         }
 
                         MimeMessage email = new MimeMessage();
-                        _logger?.LogInformation($"made it to from");
                         email.From.Add(MailboxAddress.Parse(from));
-                        _logger?.LogInformation($"made it to To");
                         email.To.Add(MailboxAddress.Parse(to));
-
-                       /* getting into condition even if cc = ""
-                       if (cc.Length > 0)
-                       {
-                           _logger?.LogInformation($"made it to cc");
-                           email.Cc.Add(MailboxAddress.Parse(cc));
-                       }
-                       if (bcc.Length > 0)
-                       {
-                           _logger?.LogInformation($"made it to bcc");
-                           email.Bcc.Add(MailboxAddress.Parse(bcc));
-                       }
-                       */
-                        _logger?.LogInformation($"made it to subject");
                         email.Subject = subject;
-                        _logger?.LogInformation($"made it to body");
-                        email.Body = new TextPart(TextFormat.Html) { Text = "<p>test</p>" };
-
+                        email.Body = new TextPart(TextFormat.Html) { Text = body };
                         smtp.Send(email);
 
-                        _logger?.LogInformation($"From:{from} | to: {to} | cc: {cc} | bcc: {bcc}");
+                        _logger?.LogInformation($"From:{from} | to: {to}");
                         _logger?.LogInformation($"Subject:{subject}");
                         _logger?.LogInformation($"Body:{body}");
                         _logger?.LogInformation($"Successfully Sent Email");
 
-                        completed = true;
+                        completedStatus = true;
+                        _logger?.LogInformation("-------------------------");
                         break;
 
                     }
                     catch (Exception e)
                     {
                         _logger?.LogError($"Failed to send email. {e.Message} ");
+                        _logger?.LogInformation("-------------------------");
 
                     }
-
                     counter++;
+                    
                 }
             }
             );
-
-            // return false if all emails fail in loop
-            return completed;
+            return completedStatus;
         }
 
         
