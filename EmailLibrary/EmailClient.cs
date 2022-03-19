@@ -34,6 +34,7 @@ namespace EmailLibrary
             _logger?.LogInformation("Attempting to retreive SMTP settings from appsetting.json");
             IConfigurationBuilder builder = null;
             IConfigurationRoot configuration = null;
+            // try to access Smtp server
             try
             {
                 builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", optional: false);
@@ -45,21 +46,19 @@ namespace EmailLibrary
                 _logger?.LogError($"unable to retreive appsettings.json in current directory. {e.Message}");
                 return false;
             }
-
+            // try to retreive values from appsetting Smtp object
             try
             {
                 this.host = configuration.GetValue<string>("Smtp:Host");
                 this.port = configuration.GetValue<int>("Smtp:Port");
                 this.username = configuration.GetValue<string>("Smtp:Username");
                 this.pass = configuration.GetValue<string>("Smtp:Password");
-
-                _logger?.LogInformation($"{host}, {port}, {username}, {pass}");
             }catch(Exception e)
             {
                 _logger?.LogError("Failed to parse SMTP creditinals from Smtp object with appsettings.json file");
                 return false;
             }
-
+            // try to connect to Smtp server
             try
             {
                 smtp = new SmtpClient();
@@ -142,6 +141,9 @@ namespace EmailLibrary
                             completedStatus = false;
                             break;
                         }
+                        _logger?.LogInformation($"From:{from} | to: {to}");
+                        _logger?.LogInformation($"Subject:{subject}");
+                        _logger?.LogInformation($"Body:{body}");
 
                         MimeMessage email = new MimeMessage();
                         email.From.Add(MailboxAddress.Parse(from));
@@ -149,12 +151,7 @@ namespace EmailLibrary
                         email.Subject = subject;
                         email.Body = new TextPart(TextFormat.Html) { Text = body };
                         smtp.Send(email);
-
-                        _logger?.LogInformation($"From:{from} | to: {to}");
-                        _logger?.LogInformation($"Subject:{subject}");
-                        _logger?.LogInformation($"Body:{body}");
-                        _logger?.LogInformation($"Successfully Sent Email");
-
+                        _logger?.LogInformation($"Successfully Sent Email | [{DateTime.Now}]");
                         completedStatus = true;
                         _logger?.LogInformation("-------------------------");
                         break;
@@ -162,7 +159,7 @@ namespace EmailLibrary
                     }
                     catch (Exception e)
                     {
-                        _logger?.LogError($"Failed to send email. {e.Message} ");
+                        _logger?.LogError($"Failed to send email. | [{DateTime.Now}] | {e.Message} ");
                         _logger?.LogInformation("-------------------------");
 
                     }
