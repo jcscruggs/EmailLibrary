@@ -144,12 +144,13 @@ namespace EmailLibrary
                         _logger?.LogInformation($"From:{from} | to: {to}");
                         _logger?.LogInformation($"Subject:{subject}");
                         _logger?.LogInformation($"Body:{body}");
-
+                        // create email
                         MimeMessage email = new MimeMessage();
                         email.From.Add(MailboxAddress.Parse(from));
                         email.To.Add(MailboxAddress.Parse(to));
                         email.Subject = subject;
                         email.Body = new TextPart(TextFormat.Html) { Text = body };
+                        //attempt to send
                         smtp.Send(email);
                         _logger?.LogInformation($"Successfully Sent Email | [{DateTime.Now}]");
                         completedStatus = true;
